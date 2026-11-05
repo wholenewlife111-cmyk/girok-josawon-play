@@ -37,6 +37,7 @@ img{image-rendering:auto}
 .brand .seal{display:grid;place-items:center;width:30px;height:30px;border:2px solid var(--gold);color:var(--gold);border-radius:4px;font-family:var(--serif)}
 .brand .bt{display:flex;flex-direction:column;line-height:1.15}.brand .bt small{font-size:12px;font-weight:600;color:var(--gold);letter-spacing:0}
 .title-hero .school{margin:16px 0 -4px;font-weight:700;font-size:16px;color:var(--gold)}
+.tbadge{margin-left:4px;padding:2px 8px;border-radius:999px;background:var(--gold);color:#1b2b2b;font-size:13px;font-weight:800}
 .who{display:flex;gap:6px;align-items:center;font-size:13px;opacity:.9}
 .who img{height:30px}
 .nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
@@ -174,7 +175,7 @@ input.t{width:100%;border:2px solid var(--line);border-radius:8px;padding:6px 10
 </head>
 <body>
 <header class="top"><div class="in">
- <div class="brand" data-go="title"><span class="seal">記</span><span class="bt"><small>신현중학교 3학년</small>기록 조사원</span></div>
+ <div class="brand" data-go="title"><span class="seal">記</span><span class="bt"><small>신현중학교 3학년</small>기록 조사원</span><span class="tbadge" id="tbadge" hidden>(교사용)</span></div>
  <div class="who" id="who"></div>
  <nav class="nav" id="nav"></nav><div class="fsz no-print"><button data-act="fs" data-v="-1" aria-label="글자 작게">가−</button><button data-act="fs" data-v="1" aria-label="글자 크게">가+</button></div>
 </div></header>
@@ -514,11 +515,11 @@ function stageNeeds(ch,i){
 }
 function stageDone(ch,i){return stageNeeds(ch,i).length===0;}
 function chDone(ch){return ch.stages.every((_,i)=>stageDone(ch,i));}
-function chOpen(n){if(S.browse)return true;if(n===1)return guideDone();return chOpen(n-1)&&chDone(CH[n-2]);}
-function stageOpen(ch,i){if(S.browse)return true;return ch.stages.slice(0,i).every((_,j)=>stageDone(ch,j));}
+function chOpen(n){if(S.browse||isTeacher())return true;if(n===1)return guideDone();return chOpen(n-1)&&chDone(CH[n-2]);}
+function stageOpen(ch,i){if(S.browse||isTeacher())return true;return ch.stages.slice(0,i).every((_,j)=>stageDone(ch,j));}
 
 /* ---------- 화면 ---------- */
-function renderTop(){
+function renderTop(){$('#tbadge').hidden=!isTeacher();
  $('#who').innerHTML=(S.names.a||S.names.b)?`${im('inv1_talk')}<span>${esc(S.names.a||'조사원 1')}</span>${im('inv2_talk')}<span>${esc(S.names.b||'조사원 2')}</span>`:'';
  const items=[['guide','조사 방법']].concat(CH.map(c=>['ch'+c.n,c.n+'장 '+(c.short||'')])).concat([['nb','📒 조사 수첩']]);
  $('#nav').innerHTML=items.map(([id,l])=>{const dis=id.startsWith('ch')&&!chOpen(+id.slice(2));return `<button data-go="${id}" aria-current="${S.screen===id}" ${dis?'disabled':''}>${l}${id.startsWith('ch')&&chDone(CH[+id.slice(2)-1])?' ✓':''}</button>`;}).join('');
@@ -539,7 +540,7 @@ function titleHTML(){return `<section class="scene title-hero"><img class="bg" s
  <label>${im('inv2')}<span>기록 조사원 2</span><input data-name="b" value="${esc(S.names.b)}" placeholder="이름"></label></div>
  <div style="margin-top:14px"><button class="btn" data-go="guide" ${S.names.a.trim()&&S.names.b.trim()?'':'disabled'}>조사 시작하기 →</button>
  <span class="muted" style="color:#e9dcc0;margin-left:8px">${S.names.a.trim()&&S.names.b.trim()?'':'두 조사원의 이름을 적으면 시작할 수 있어요.'}</span></div></div></section>
- ${isTeacher()||S.browse?`<p class="muted no-print">교사용: <button class="btn ghost sm" data-act="browse">${S.browse?'둘러보기 모드 끄기':'모든 장 둘러보기'}</button> (진행 조건 없이 모든 화면을 열어 볼 수 있어요)</p>`:''}`;}
+ ${isTeacher()?`<p class="muted no-print"><b>(교사용)</b> 교사용 링크로 열었어요. 위쪽 메뉴에서 모든 장과 단계를 진행 조건 없이 오갈 수 있어요.</p>`:S.browse?`<p class="muted no-print">교사용: <button class="btn ghost sm" data-act="browse">둘러보기 모드 끄기</button></p>`:''}`;}
 function isTeacher(){try{return decodeURIComponent(location.hash).includes('교사');}catch(e){return false;}}
 
 function guideHTML(){
@@ -648,7 +649,7 @@ function chHTML(ch){
   if(st.kind==='pair'||st.kind==='pair2')h+=`<div class="panel" style="text-align:center"><p>${st.check?'짝과 함께 읽고 표시한 것을 선생님과 확인했나요?':'짝에게 내가 쓴 답의 이유를 말해 주었나요?'}</p><button class="btn" data-act="talk" data-k="${k}">${st.check?(S.done[k+':talk']?'선생님과 확인 완료 ✅':'선생님과 확인 완료'):(S.done[k+':talk']?'설명 나눔 완료 ✅':'설명 나눔 완료')}</button></div>`;
  }
  const need=stageNeeds(ch,si),last=si===ch.stages.length-1,next=CH[ch.n];
- h+=`<div class="foot no-print"><span class="need">${need.length?'아직 남은 것: '+need.join(', '):'이 단계를 모두 마쳤어요!'}</span>${last?(next?`<button class="btn" data-go="ch${next.n}" ${chOpen(next.n)?'':'disabled'}>${next.n}장으로 →</button>`:`<button class="btn" data-go="nb" ${chDone(ch)||S.browse?'':'disabled'}>조사 수첩 보기 →</button>`):`<button class="btn" data-stage="${ch.n}" data-i="${si+1}" ${stageOpen(ch,si+1)?'':'disabled'}>다음 단계 →</button>`}</div>`;
+ h+=`<div class="foot no-print"><span class="need">${need.length?'아직 남은 것: '+need.join(', '):'이 단계를 모두 마쳤어요!'}</span>${last?(next?`<button class="btn" data-go="ch${next.n}" ${chOpen(next.n)?'':'disabled'}>${next.n}장으로 →</button>`:`<button class="btn" data-go="nb" ${chDone(ch)||S.browse||isTeacher()?'':'disabled'}>조사 수첩 보기 →</button>`):`<button class="btn" data-stage="${ch.n}" data-i="${si+1}" ${stageOpen(ch,si+1)?'':'disabled'}>다음 단계 →</button>`}</div>`;
  return h;}
 
 /* 수첩 */
@@ -702,6 +703,7 @@ function rer(){const y=scrollY;render();scrollTo(0,y);}
 let ft;function updFoot(){clearTimeout(ft);ft=setTimeout(()=>{const y=scrollY,ae=document.activeElement,key=ae&&(ae.dataset.a||ae.dataset.cloze),pos=ae&&ae.selectionStart;
  if(S.screen==='guide'||S.screen.startsWith('ch')){const foot=document.querySelector('.foot');if(foot){const tmp=document.createElement('div');tmp.innerHTML=S.screen==='guide'?guideHTML():chHTML(CH[+S.screen.slice(2)-1]);const ns=tmp.querySelector('.stage-tabs'),os=document.querySelector('.stage-tabs');if(ns&&os)os.innerHTML=ns.innerHTML;const nf=tmp.querySelectorAll('.foot');const of=document.querySelectorAll('.foot');if(nf.length&&of.length)of[of.length-1].innerHTML=nf[nf.length-1].innerHTML;}renderTop();}
  },250);}
+window.addEventListener('hashchange',render);
 render();applyFz();
 </script>
 </body>
