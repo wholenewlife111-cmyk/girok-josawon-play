@@ -587,7 +587,7 @@ function recHTML(ch,si,rid,opt={}){
  if(open||st.srcQ){h+=provHTML(r);}
  if(st.srcQ&&r.sq){h+=`<div class="q"><label class="ql">${esc(r.sq)}<span class="req">필수</span></label><textarea data-a="${k}:${rid}:src1">${esc(A(k+':'+rid+':src1'))}</textarea></div>`;}
  if(r.words&&r.words.length)h+=`<div class="words"><b>단어 풀이</b><ul>${r.words.map(w=>{const i=w.indexOf(':');return `<li><b>${esc(w.slice(0,i))}</b>${esc(w.slice(i+1))}</li>`;}).join('')}</ul></div>`;
- if(st.table3)h+=`<table class="tbl" style="margin-top:10px">${[['fact','사실','기록에서 확인할 수 있는 일'],['aim','의도','기록 속 나라나 인물이 원한 것'],['basis','근거','그렇게 본 기록의 문장']].map(([x,l,ph])=>`<tr><th>${l}</th><td><textarea data-a="${k}:${rid}:${x}" placeholder="${esc(x==='aim'&&r.aimHint?r.aimHint:ph)}">${esc(A(k+':'+rid+':'+x))}</textarea></td></tr>`).join('')}</table>`;
+ if(st.table3)h+=`<table class="tbl" style="margin-top:10px">${[['fact','사실','기록에서 확인할 수 있는 일'],['aim','의도','기록 속 나라나 인물이 원한 것'],['basis','근거','그렇게 판단하게 된 기록 속 문장']].map(([x,l,ph])=>`<tr><th>${l}</th><td><textarea data-a="${k}:${rid}:${x}" placeholder="${esc(x==='aim'&&r.aimHint?r.aimHint:ph)}">${esc(A(k+':'+rid+':'+x))}</textarea></td></tr>`).join('')}</table>`;
  if(st.table3&&r.aimHint)h+=`<p class="cue">💡 의도 칸: ${esc(r.aimHint)}</p>`;
  for(const q of ((st.qs||{})[rid]||[]))h+=qHTML(k+':'+rid+':'+q.id,q);
  return h+'</article>';}
