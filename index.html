@@ -35,6 +35,7 @@ img{image-rendering:auto}
 .top .in{max-width:1180px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:-.02em;cursor:pointer}
 .brand .seal{display:grid;place-items:center;width:30px;height:30px;border:2px solid var(--gold);color:var(--gold);border-radius:4px;font-family:var(--serif)}
+.brand .bt{display:flex;flex-direction:column;line-height:1.15}.brand .bt small{font-size:12px;font-weight:600;color:var(--gold);letter-spacing:0}
 .who{display:flex;gap:6px;align-items:center;font-size:13px;opacity:.9}
 .who img{height:30px}
 .nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
@@ -172,7 +173,7 @@ input.t{width:100%;border:2px solid var(--line);border-radius:8px;padding:6px 10
 </head>
 <body>
 <header class="top"><div class="in">
- <div class="brand" data-go="title"><span class="seal">記</span>기록 조사원</div>
+ <div class="brand" data-go="title"><span class="seal">記</span><span class="bt"><small>신현중학교 3학년</small>기록 조사원</span></div>
  <div class="who" id="who"></div>
  <nav class="nav" id="nav"></nav><div class="fsz no-print"><button data-act="fs" data-v="-1" aria-label="글자 작게">가−</button><button data-act="fs" data-v="1" aria-label="글자 크게">가+</button></div>
 </div></header>
@@ -703,4 +704,3 @@ render();applyFz();
 </script>
 </body>
 </html>
-
