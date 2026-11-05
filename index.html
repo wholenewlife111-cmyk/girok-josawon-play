@@ -36,6 +36,7 @@ img{image-rendering:auto}
 .brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:-.02em;cursor:pointer}
 .brand .seal{display:grid;place-items:center;width:30px;height:30px;border:2px solid var(--gold);color:var(--gold);border-radius:4px;font-family:var(--serif)}
 .brand .bt{display:flex;flex-direction:column;line-height:1.15}.brand .bt small{font-size:12px;font-weight:600;color:var(--gold);letter-spacing:0}
+.title-hero .school{margin:16px 0 -4px;font-weight:700;font-size:16px;color:var(--gold)}
 .who{display:flex;gap:6px;align-items:center;font-size:13px;opacity:.9}
 .who img{height:30px}
 .nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
@@ -533,6 +534,7 @@ function titleHTML(){return `<section class="scene title-hero"><img class="bg" s
  <h1>1591년 겨울, 한 양반이 길을 떠나며<br>일기를 쓰기 시작했습니다.</h1>
  <p>그는 9년 3개월이 지나서야 집으로 돌아옵니다.</p>
  <p>그 일기 속 사람들은 <b class="q-em">‘서로 다른’</b> 전쟁을 겪었습니다.</p>
+ <div class="school">신현중학교 3학년</div>
  <div class="names"><label>${im('inv1')}<span>기록 조사원 1</span><input data-name="a" value="${esc(S.names.a)}" placeholder="이름"></label>
  <label>${im('inv2')}<span>기록 조사원 2</span><input data-name="b" value="${esc(S.names.b)}" placeholder="이름"></label></div>
  <div style="margin-top:14px"><button class="btn" data-go="guide" ${S.names.a.trim()&&S.names.b.trim()?'':'disabled'}>조사 시작하기 →</button>
