@@ -36,7 +36,8 @@ img{image-rendering:auto}
 .brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:-.02em;cursor:pointer}
 .brand .seal{display:grid;place-items:center;width:30px;height:30px;border:2px solid var(--gold);color:var(--gold);border-radius:4px;font-family:var(--serif)}
 .brand .bt{display:flex;flex-direction:column;line-height:1.15}.brand .bt small{font-size:12px;font-weight:600;color:var(--gold);letter-spacing:0}
-.title-hero .school{margin:16px 0 -4px;font-weight:700;font-size:16px;color:var(--gold)}
+.title-hero .school{margin:16px 0 -4px;font-weight:700;font-size:16px;color:var(--gold);display:flex;align-items:center;gap:6px;flex-wrap:wrap}.title-hero .school input{width:64px;font:inherit;font-size:18px;text-align:center;padding:4px 6px;border-radius:8px;border:2px solid var(--gold);background:#fffaf0;color:#1b2b2b}
+.sync{font-size:12px;opacity:.85;margin-left:4px}@media(max-width:760px){.sync{order:9;flex-basis:100%;margin:0}}
 .tbadge{margin-left:4px;padding:2px 8px;border-radius:999px;background:var(--gold);color:#1b2b2b;font-size:13px;font-weight:800}
 .who{display:flex;gap:6px;align-items:center;font-size:13px;opacity:.9}
 .who img{height:30px}
@@ -176,7 +177,7 @@ input.t{width:100%;border:2px solid var(--line);border-radius:8px;padding:6px 10
 <body>
 <header class="top"><div class="in">
  <div class="brand" data-go="title"><span class="seal">記</span><span class="bt"><small>신현중학교 3학년</small>기록 조사원</span><span class="tbadge" id="tbadge" hidden>(교사용)</span></div>
- <div class="who" id="who"></div>
+ <div class="who" id="who"></div><span class="sync no-print" id="sync"></span>
  <nav class="nav" id="nav"></nav><div class="fsz no-print"><button data-act="fs" data-v="-1" aria-label="글자 작게">가−</button><button data-act="fs" data-v="1" aria-label="글자 크게">가+</button></div>
 </div></header>
 <main id="app"></main>
@@ -472,7 +473,7 @@ const SUP=[['full','제공된 기록으로 뒷받침된다'],['part','제공된 
 </script>
 <script>
 const KEY='girok-josawon-2026-1104';
-let S={names:{a:'',b:''},screen:'title',guide:{cloze:{},quiz:{}},crit:[],a:{},marks:{},ev:{},done:{},stage:{},browse:false,mark:null};
+let S={cls:'',names:{a:'',b:''},screen:'title',guide:{cloze:{},quiz:{}},crit:[],a:{},marks:{},ev:{},done:{},stage:{},browse:false,mark:null};
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const $=s=>document.querySelector(s);
@@ -480,6 +481,30 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const im=(k,cls='',alt='')=>IMG[k]?`<img class="${cls}" src="${IMG[k]}" alt="${esc(alt)}">`:'';
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2000);}
 const A=(k)=>(S.a[k]||'');const filled=k=>A(k).trim().length>0;
+/* ---------- 선생님께 답 보내기 (구글 Apps Script) ---------- */
+const SEND_URL='https://script.google.com/macros/s/AKfycby2nD-fLyOS9NnGTXovCoS4C8B-1Q5k7lUJFrHHmtr5g9seX710lGlVEdVip0hGTyZ-Ww/exec';/*SEND_URL*/
+const OUTBOX='girok-outbox',DEVK='girok-dev';
+let DEV='';try{DEV=localStorage.getItem(DEVK)||'';if(!DEV){DEV=Math.random().toString(36).slice(2,10);localStorage.setItem(DEVK,DEV);}}catch(e){DEV='x'+Math.random().toString(36).slice(2,8);}
+let OB={};try{OB=JSON.parse(localStorage.getItem(OUTBOX)||'{}')||{};}catch(e){OB={};}
+const scrName=()=>S.screen==='guide'?'조사 방법':S.screen==='nb'?'조사 수첩':S.screen.startsWith('ch')?S.screen.slice(2)+'장':'';
+function labelOf(t){if(!t||!t.closest)return '';let l='';const q=t.closest('.q');const ql=q&&q.querySelector('.ql');if(ql){const c=ql.cloneNode(true);c.querySelectorAll('.req,.tag,.opt').forEach(x=>x.remove());l=c.textContent.replace(/\s+/g,' ').trim();}
+ const sub=t.parentElement&&t.parentElement.querySelector(':scope > .muted');if(sub&&sub!==t)l=(l?l+' — ':'')+sub.textContent.trim();
+ if(!l){const th=t.closest('td');const tr=th&&th.closest('tr');if(tr){const h=tr.querySelector('th,td');if(h&&h!==th)l=h.textContent.replace(/\s+/g,' ').trim();}}
+ if(!l)l=t.placeholder||'';return l.slice(0,200);}
+const LBL=[[/^crit0$/,'나의 ‘평화’에 대한 기준 (처음)'],[/^crit1$/,'고친 ‘평화’에 대한 기준'],[/^rev:keep$/,'기준을 그대로 둘까, 고칠까'],[/^rev:why$/,'기준을 그대로 두거나 고친 까닭'],
+ [/^p(\d{4}):v$/,'$1년, 평화라 할 수 있을까? — 판단'],[/^p(\d{4}):why$/,'$1년, 평화라 할 수 있을까? — 까닭'],
+ [/^c1s2:([A-C]):fact$/,'기록 $1 — 사실'],[/^c1s2:([A-C]):aim$/,'기록 $1 — 의도'],[/^c1s2:([A-C]):basis$/,'기록 $1 — 근거(기록 속 문장)'],
+ [/^c3s0:t4:f$/,'막정과 노비들 — 기록에 적힌 일'],[/^c3s0:t4:e$/,'막정과 노비들 — 오희문의 평가·짐작'],[/^c3s1:(V\d+):why$/,'‘막정의 목소리’ 문장 $1 — 견준 기록']];
+function fixLabel(k,l){for(const [re,t] of LBL)if(re.test(k))return k.replace(re,t);return l;}
+function sendQ(k,v,label){if(!SEND_URL||isTeacher())return;label=fixLabel(k,label);OB[k]={k,v:String(v==null?'':v),label:label||(OB[k]&&OB[k].label)||'',scr:scrName()};try{localStorage.setItem(OUTBOX,JSON.stringify(OB));}catch(e){}clearTimeout(sendQ.t);sendQ.t=setTimeout(flush,3000);syncMark();}
+let sending=false;
+function flush(){if(!SEND_URL||isTeacher()||sending)return;const items=Object.values(OB);if(!items.length||!(S.cls||'').trim())return;sending=true;syncMark();
+ const batch=items.slice(0,50);const body=JSON.stringify({cls:S.cls,a:S.names.a,b:S.names.b,dev:DEV,items:batch});
+ fetch(SEND_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body}).then(()=>{for(const it of batch){if(OB[it.k]&&OB[it.k].v===it.v)delete OB[it.k];}try{localStorage.setItem(OUTBOX,JSON.stringify(OB));}catch(e){}sending=false;syncMark();if(Object.keys(OB).length)setTimeout(flush,800);})
+ .catch(()=>{sending=false;syncMark(true);setTimeout(flush,15000);});}
+function syncMark(err){const e=document.getElementById('sync');if(!e)return;if(!SEND_URL||isTeacher()){e.textContent='';return;}const n=Object.keys(OB).length;
+ e.textContent=!(S.cls||'').trim()?'':err?'⚠ 연결이 끊겨 답을 모아 두는 중 ('+n+')':n?'답 보내는 중…':'✓ 선생님께 전해졌어요';}
+setInterval(flush,20000);window.addEventListener('online',flush);
 
 /* ---------- 진행 조건 ---------- */
 function guideDone(){return ['g1','g2','g3','g4'].every(k=>(S.guide.cloze[k]||'').trim())&&S.guide.quiz.q1==='b'&&S.guide.quiz.q2==='b'&&filled('crit0');}
@@ -519,8 +544,8 @@ function chOpen(n){if(S.browse||isTeacher())return true;if(n===1)return guideDon
 function stageOpen(ch,i){if(S.browse||isTeacher())return true;return ch.stages.slice(0,i).every((_,j)=>stageDone(ch,j));}
 
 /* ---------- 화면 ---------- */
-function renderTop(){$('#tbadge').hidden=!isTeacher();
- $('#who').innerHTML=(S.names.a||S.names.b)?`${im('inv1_talk')}<span>${esc(S.names.a||'조사원 1')}</span>${im('inv2_talk')}<span>${esc(S.names.b||'조사원 2')}</span>`:'';
+function renderTop(){syncMark();$('#tbadge').hidden=!isTeacher();
+ $('#who').innerHTML=(S.names.a||S.names.b)?`${S.cls?'<span>'+esc(S.cls)+'반</span>':''}${im('inv1_talk')}<span>${esc(S.names.a||'조사원 1')}</span>${im('inv2_talk')}<span>${esc(S.names.b||'조사원 2')}</span>`:'';
  const items=[['guide','조사 방법']].concat(CH.map(c=>['ch'+c.n,c.n+'장 '+(c.short||'')])).concat([['nb','📒 조사 수첩']]);
  $('#nav').innerHTML=items.map(([id,l])=>{const dis=id.startsWith('ch')&&!chOpen(+id.slice(2));return `<button data-go="${id}" aria-current="${S.screen===id}" ${dis?'disabled':''}>${l}${id.startsWith('ch')&&chDone(CH[+id.slice(2)-1])?' ✓':''}</button>`;}).join('');
 }
@@ -535,12 +560,13 @@ function titleHTML(){return `<section class="scene title-hero"><img class="bg" s
  <h1>1591년 겨울, 한 양반이 길을 떠나며<br>일기를 쓰기 시작했습니다.</h1>
  <p>그는 9년 3개월이 지나서야 집으로 돌아옵니다.</p>
  <p>그 일기 속 사람들은 <b class="q-em">‘서로 다른’</b> 전쟁을 겪었습니다.</p>
- <div class="school">신현중학교 3학년</div>
+ <div class="school"><span>신현중학교 3학년</span><input data-cls inputmode="numeric" maxlength="2" value="${esc(S.cls||'')}" placeholder="( )" aria-label="반"><span>반</span></div>
  <div class="names"><label>${im('inv1')}<span>기록 조사원 1</span><input data-name="a" value="${esc(S.names.a)}" placeholder="이름"></label>
  <label>${im('inv2')}<span>기록 조사원 2</span><input data-name="b" value="${esc(S.names.b)}" placeholder="이름"></label></div>
- <div style="margin-top:14px"><button class="btn" data-go="guide" ${S.names.a.trim()&&S.names.b.trim()?'':'disabled'}>조사 시작하기 →</button>
- <span class="muted" style="color:#e9dcc0;margin-left:8px">${S.names.a.trim()&&S.names.b.trim()?'':'두 조사원의 이름을 적으면 시작할 수 있어요.'}</span></div></div></section>
+ <div style="margin-top:14px"><button class="btn" data-go="guide" ${ready()?'':'disabled'}>조사 시작하기 →</button>
+ <span class="muted" style="color:#e9dcc0;margin-left:8px">${ready()?'':'반과 두 조사원의 이름을 적으면 시작할 수 있어요.'}</span></div></div></section>
  ${isTeacher()?`<p class="muted no-print"><b>(교사용)</b> 교사용 링크로 열었어요. 위쪽 메뉴에서 모든 장과 단계를 진행 조건 없이 오갈 수 있어요.</p>`:S.browse?`<p class="muted no-print">교사용: <button class="btn ghost sm" data-act="browse">둘러보기 모드 끄기</button></p>`:''}`;}
+function ready(){return !!((S.cls||'').trim()&&S.names.a.trim()&&S.names.b.trim());}
 function isTeacher(){try{return decodeURIComponent(location.hash).includes('교사');}catch(e){return false;}}
 
 function guideHTML(){
@@ -663,7 +689,7 @@ function nbHTML(){
  ${A('war')?`<div class="panel"><b>전쟁은</b> ${esc(A('war').replace(/^전쟁은\s*/,''))}</div>`:''}
  ${CH.map(ch=>ch.stages.map((st,i)=>st.bridge?st.bridge.prompts.filter(([pk])=>A(stageKey(ch.n,i)+':'+pk)).map(([pk,pq])=>`<p><b>${esc(pq)}</b><br>${esc(A(stageKey(ch.n,i)+':'+pk))}</p>`).join(''):'').join('')).join('').replace(/^(.+)$/s,`<div class="panel"><h3 class="sec">${im('ic_openbook')} 다음 단원으로 가는 다리 — Ⅴ. 조선 사회의 변동에서 다시 볼 생각</h3>$1</div>`)}
  <div class="panel no-print"><h3 class="sec">${im('ic_handover')} 제출과 보관</h3><div class="foot" style="justify-content:flex-start"><button class="btn" data-act="copy">전체 응답 복사하기</button><button class="btn ghost" data-act="print">인쇄 / PDF로 저장</button><button class="btn ghost" data-act="export">응답 파일 저장</button><label class="btn ghost" style="cursor:pointer">응답 파일 불러오기<input type="file" accept=".json" data-act="import" hidden></label></div>
- <p class="muted">응답은 이 기기의 브라우저에만 저장돼요. 수업이 끝나면 응답 파일을 저장하거나 복사해서 제출해 주세요.</p><button class="btn ghost sm" data-act="reset">처음부터 다시 하기</button> <span id="rq"></span></div>`;}
+ <p class="muted">${SEND_URL?'쓴 답은 자동으로 선생님께 전해져요. 이 기기에도 저장되니, 다음 시간에도 같은 기기·같은 브라우저로 열어요.':'응답은 이 기기의 브라우저에만 저장돼요. 수업이 끝나면 응답 파일을 저장해 보관해 주세요.'}</p><button class="btn ghost sm" data-act="reset">처음부터 다시 하기</button> <span id="rq"></span></div>`;}
 function exportText(){const L=[`기록 조사원 — ${S.names.a} · ${S.names.b}`,'',`[나의 ‘평화’에 대한 기준] ${A('crit0')}${A('rev:keep')==='change'?' → '+A('crit1'):''}`];
  for(const [k,v] of Object.entries(S.a)){if(!v||k.startsWith('open:'))continue;L.push(`${k}: ${v}`);}
  for(const [k,ids] of Object.entries(S.ev))L.push(`${k} 근거: `+ids.map(id=>{const r=id.split('#')[0];const s=sentences(r).find(x=>x.id===id);return s?s.t:'';}).join(' / '));
@@ -674,10 +700,10 @@ document.addEventListener('click',e=>{
  const t=e.target.closest('[data-go],[data-act],[data-stage],[data-set],[data-mark],[data-tok],[data-quiz]');if(!t)return;
  if(t.dataset.go){if(t.disabled)return;S.screen=t.dataset.go;save();render();scrollTo(0,0);return;}
  if(t.dataset.stage){S.stage[t.dataset.stage]=+t.dataset.i;save();render();scrollTo(0,0);return;}
- if(t.dataset.set){S.a[t.dataset.set]=t.dataset.v;save();rer();return;}
+ if(t.dataset.set){S.a[t.dataset.set]=t.dataset.v;save();sendQ(t.dataset.set,(t.textContent||t.dataset.v).trim(),labelOf(t));rer();return;}
  if(t.dataset.mark){S.mark=S.mark===t.dataset.mark?null:t.dataset.mark;save();rer();return;}
  if(t.dataset.tok){if(!S.mark)return;const [rid,id]=t.dataset.tok.split('|');const m=S.marks[rid]=S.marks[rid]||{};if(S.mark==='x'||m[id]===S.mark)delete m[id];else m[id]=S.mark;save();t.className='tok'+(m[id]?' m-'+m[id]:'');return;}
- if(t.dataset.quiz){S.guide.quiz[t.dataset.quiz]=t.dataset.v;save();rer();return;}
+ if(t.dataset.quiz){S.guide.quiz[t.dataset.quiz]=t.dataset.v;save();sendQ('확인 질문:'+t.dataset.quiz,(t.textContent||t.dataset.v).trim(),labelOf(t)||'조사 방법 확인 질문');rer();return;}
  const a=t.dataset.act;
  if(a==='fs'){S.fz=Math.min(1.4,Math.max(.85,(S.fz||1)+(+t.dataset.v)*.1));save();applyFz();return;}
  if(a==='browse'){S.browse=!S.browse;save();render();toast(S.browse?'모든 장을 열었어요':'진행 조건을 다시 적용해요');}
@@ -690,12 +716,13 @@ document.addEventListener('click',e=>{
  if(a==='reset'){const q=$('#rq');if(q.dataset.armed){const n=S.names;S={names:n,screen:'title',guide:{cloze:{},quiz:{}},crit:[],a:{},marks:{},ev:{},done:{},stage:{},browse:false,mark:null};save();render();toast('처음 상태로 돌렸어요');}else{q.dataset.armed=1;q.innerHTML='<b class="need">한 번 더 누르면 모두 지워져요.</b>';}}
 });
 document.addEventListener('input',e=>{const t=e.target;
- if(t.dataset.name){S.names[t.dataset.name]=t.value;save();renderTop();const b=document.querySelector('.btn[data-go=guide]');if(b){b.disabled=!(S.names.a.trim()&&S.names.b.trim());}return;}
- if(t.dataset.a){S.a[t.dataset.a]=t.value;save();updFoot();return;}
- if(t.dataset.cloze){S.guide.cloze[t.dataset.cloze]=t.value;S.guide.checked=false;t.className='';save();updFoot();return;}});
+ if(t.hasAttribute&&t.hasAttribute('data-cls')){t.value=t.value.replace(/[^0-9]/g,'');S.cls=t.value;save();renderTop();const b=document.querySelector('.btn[data-go=guide]');if(b)b.disabled=!ready();syncMark();flush();return;}
+ if(t.dataset.name){S.names[t.dataset.name]=t.value;save();renderTop();const b=document.querySelector('.btn[data-go=guide]');if(b){b.disabled=!ready();}return;}
+ if(t.dataset.a){S.a[t.dataset.a]=t.value;save();sendQ(t.dataset.a,t.value,labelOf(t));updFoot();return;}
+ if(t.dataset.cloze){S.guide.cloze[t.dataset.cloze]=t.value;sendQ('빈칸:'+t.dataset.cloze,t.value,'조사 방법 빈칸 '+t.dataset.cloze);S.guide.checked=false;t.className='';save();updFoot();return;}});
 document.addEventListener('change',e=>{const t=e.target;
- if(t.tagName==='SELECT'&&t.dataset.a){S.a[t.dataset.a]=t.value;save();rer();return;}
- if(t.dataset.ev){const k=t.dataset.ev;const set=new Set(S.ev[k]||[]);t.checked?set.add(t.value):set.delete(t.value);S.ev[k]=[...set];save();rer();return;}
+ if(t.tagName==='SELECT'&&t.dataset.a){S.a[t.dataset.a]=t.value;save();sendQ(t.dataset.a,t.value,labelOf(t));rer();return;}
+ if(t.dataset.ev){const k=t.dataset.ev;const set=new Set(S.ev[k]||[]);t.checked?set.add(t.value):set.delete(t.value);S.ev[k]=[...set];save();sendQ('근거:'+k,S.ev[k].map(id=>{const s=sentences(id.split('#')[0]).find(x=>x.id===id);return s?s.t:id;}).join(' / '),labelOf(t)||'고른 근거 문장');rer();return;}
  if(t.dataset.act==='import'&&t.files[0]){const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.app!==KEY)throw 0;S=Object.assign(S,d.S);save();render();toast('불러왔어요');}catch(_){toast('이 게임의 응답 파일이 아니에요');}};r.readAsText(t.files[0]);}
 });
 function applyFz(){const a=document.getElementById('app');if(a)a.style.zoom=S.fz||1;}
@@ -704,6 +731,7 @@ let ft;function updFoot(){clearTimeout(ft);ft=setTimeout(()=>{const y=scrollY,ae
  if(S.screen==='guide'||S.screen.startsWith('ch')){const foot=document.querySelector('.foot');if(foot){const tmp=document.createElement('div');tmp.innerHTML=S.screen==='guide'?guideHTML():chHTML(CH[+S.screen.slice(2)-1]);const ns=tmp.querySelector('.stage-tabs'),os=document.querySelector('.stage-tabs');if(ns&&os)os.innerHTML=ns.innerHTML;const nf=tmp.querySelectorAll('.foot');const of=document.querySelectorAll('.foot');if(nf.length&&of.length)of[of.length-1].innerHTML=nf[nf.length-1].innerHTML;}renderTop();}
  },250);}
 window.addEventListener('hashchange',render);
+setTimeout(flush,1500);
 render();applyFz();
 </script>
 </body>
