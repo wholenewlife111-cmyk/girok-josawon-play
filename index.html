@@ -560,7 +560,7 @@ function titleHTML(){return `<section class="scene title-hero"><img class="bg" s
  <h1>1591년 겨울, 한 양반이 길을 떠나며<br>일기를 쓰기 시작했습니다.</h1>
  <p>그는 9년 3개월이 지나서야 집으로 돌아옵니다.</p>
  <p>그 일기 속 사람들은 <b class="q-em">‘서로 다른’</b> 전쟁을 겪었습니다.</p>
- <div class="school"><span>신현중학교 3학년</span><input data-cls inputmode="numeric" maxlength="2" value="${esc(S.cls||'')}" placeholder="( )" aria-label="반"><span>반</span></div>
+ <div class="school"><span>신현중학교 3학년</span><input data-cls inputmode="numeric" maxlength="2" value="${esc(S.cls||'')}" aria-label="반"><span>반</span></div>
  <div class="names"><label>${im('inv1')}<span>기록 조사원 1</span><input data-name="a" value="${esc(S.names.a)}" placeholder="이름"></label>
  <label>${im('inv2')}<span>기록 조사원 2</span><input data-name="b" value="${esc(S.names.b)}" placeholder="이름"></label></div>
  <div style="margin-top:14px"><button class="btn" data-go="guide" ${ready()?'':'disabled'}>조사 시작하기 →</button>
